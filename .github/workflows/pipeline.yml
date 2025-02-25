@@ -35,9 +35,9 @@ jobs:
       - name: SSH into VM and Deploy
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.VM_IP }}     # Your VM's IP address
-          username: ${{ secrets.VM_USERNAME }} # Your VM's SSH username
-          key: ${{ secrets.VM_KEY }}   # Your private SSH key stored in GitHub Secrets
+          host: ${{ secrets.VM_HOST }}     # Your VM's IP address
+          username: ${{ secrets.VM_USER }} # Your VM's SSH username
+          key: ${{ secrets.VM_SSH_KEY }}   # Your private SSH key stored in GitHub Secrets
           script: |
             echo "Pulling latest image..."
             docker pull swimpyblaq92/chima:${{ env.IMAGE_TAG }}
