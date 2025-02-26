@@ -27,22 +27,18 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: docker push swimpyblaq92/chima:${{ env.IMAGE_TAG }}
 
-      - name: Save Image Tag for Deployment
-        run: echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
-        id: set_image_tag
-
     outputs:
-      IMAGE_TAG: ${{ env.IMAGE_TAG }}  # Ensure IMAGE_TAG is available for deploy job
+      IMAGE_TAG: ${{ env.IMAGE_TAG }}
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug SSH Key
+      - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_KEY }}" | base64 --decode > ~/.ssh/github-action-key
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
 
       - name: Test SSH Connection
@@ -63,7 +59,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            set -e  # Stop execution on any error
+            set -e  
             
             echo "Ensuring Docker is installed and running..."
             sudo systemctl start docker || true
