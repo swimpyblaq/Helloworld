@@ -1,18 +1,51 @@
-- name: Set up SSH
-  uses: webfactory/ssh-agent@v0.5.4
-  with:
-    ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+name: CI Pipeline
 
-- name: Deploy to VM
-  run: |
-    ssh -o StrictHostKeyChecking=no user@your-vm-ip << 'EOF'
-      echo "Pulling latest image..."
-      docker pull swimpyblaq92/chima:${{ env.IMAGE_TAG }}
-      
-      echo "Stopping existing container..."
-      docker stop my_app_container || true
-      docker rm my_app_container || true
-      
-      echo "Starting new container..."
-      docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}
-    EOF
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches: 
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker image to Docker Hub
+        run: docker push swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into VM and Deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VM_HOST }}     # Your VM's IP address
+          username: ${{ secrets.VM_USER }} # Your VM's SSH username
+          key: ${{ secrets.VM_SSH_KEY }}   # Your private SSH key stored in GitHub Secrets
+          script: |
+            echo "Pulling latest image..."
+            docker pull swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+            
+            echo "Stopping existing container..."
+            docker stop my_app_container || true
+            docker rm my_app_container || true
+            
+            echo "Starting new container..."
+            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+
