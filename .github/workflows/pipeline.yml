@@ -38,19 +38,19 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/github-action-key
+          echo -e "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/github-action-key
           chmod 600 ~/.ssh/github-action-key
+          ls -la ~/.ssh
 
       - name: Test SSH Connection
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            set -e
-            echo "Testing SSH Connection..."
-            whoami
+        env:
+          SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "Error: SSH key is empty!"
+            exit 1
+          fi
+          ssh -i ~/.ssh/github-action-key -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "whoami"
 
       - name: Deploy to VM using SSH
         uses: appleboy/ssh-action@v0.1.10
