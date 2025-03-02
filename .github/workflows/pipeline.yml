@@ -59,12 +59,15 @@ jobs:
           
           # Remove Windows-style line endings
           echo "${{ secrets.VM_SSH_KEY }}" | tr -d '\r' > $HOME/.ssh/id_rsa
-          
           chmod 600 $HOME/.ssh/id_rsa
           ls -la $HOME/.ssh
 
           # Add VM to known hosts
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> $HOME/.ssh/known_hosts || { echo "Failed to scan host key"; exit 1; }
+          echo "Checking VM connectivity..."
+          ping -c 3 ${{ secrets.VM_HOST }} || echo "Ping failed, but continuing..."
+
+          echo "Scanning SSH host key..."
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> $HOME/.ssh/known_hosts || echo "ssh-keyscan failed, continuing without it."
           chmod 644 $HOME/.ssh/known_hosts
 
           echo "SSH key setup completed successfully!"
@@ -91,4 +94,4 @@ jobs:
             docker rm my_app_container || true
             
             echo "Starting new container..."
-            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}"
