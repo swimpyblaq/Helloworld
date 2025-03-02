@@ -32,12 +32,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug SSH Directory
+        run: |
+          echo "Checking if .ssh directory exists..."
+          ls -la $HOME
+          if [ ! -d "$HOME/.ssh" ]; then
+            echo ".ssh directory not found. Creating..."
+            mkdir -p $HOME/.ssh
+          fi
+          ls -la $HOME
+
       - name: Set up SSH key
         run: |
-          mkdir -p $HOME/.ssh
+          echo "Setting up SSH key..."
           echo "${{ secrets.VM_SSH_KEY }}" | tr -d '\r' > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VM_HOST }} >> $HOME/.ssh/known_hosts
+        shell: bash
 
       - name: SSH into VM and Deploy
         uses: appleboy/ssh-action@v0.1.10
