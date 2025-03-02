@@ -34,20 +34,32 @@ jobs:
     steps:
       - name: Debug SSH Directory
         run: |
-          echo "Checking if .ssh directory exists..."
+          echo "Checking SSH directory..."
           ls -la $HOME
-          if [ ! -d "$HOME/.ssh" ]; then
-            echo ".ssh directory not found. Creating..."
-            mkdir -p $HOME/.ssh
-          fi
-          ls -la $HOME
+          mkdir -p $HOME/.ssh
+          chmod 700 $HOME/.ssh
+          ls -la $HOME/.ssh
 
       - name: Set up SSH key
         run: |
+          set -e  # Stop on error
           echo "Setting up SSH key..."
-          echo "${{ secrets.VM_SSH_KEY }}" | tr -d '\r' > $HOME/.ssh/id_rsa
+          
+          # Ensure the key does not contain Windows line endings
+          echo "${{ secrets.VM_SSH_KEY }}" | sed 's/\r$//' > $HOME/.ssh/id_rsa
           chmod 600 $HOME/.ssh/id_rsa
+          
+          # Add VM to known hosts
           ssh-keyscan -H ${{ secrets.VM_HOST }} >> $HOME/.ssh/known_hosts
+          chmod 644 $HOME/.ssh/known_hosts
+
+          echo "SSH key setup completed successfully!"
+        shell: bash
+
+      - name: Test SSH Connection
+        run: |
+          echo "Testing SSH connection..."
+          ssh -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "echo 'SSH connection successful'"
         shell: bash
 
       - name: SSH into VM and Deploy
