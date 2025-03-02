@@ -2,10 +2,10 @@ name: CI Pipeline
 
 on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
-    branches: 
+    branches:
       - main
 
 jobs:
@@ -34,17 +34,17 @@ jobs:
     steps:
       - name: Set up SSH key
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+          mkdir -p $HOME/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> $HOME/.ssh/known_hosts
 
       - name: SSH into VM and Deploy
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.VM_HOST }}     # Your VM's IP address
-          username: ${{ secrets.VM_USER }} # Your VM's SSH username
-          key: ${{ secrets.VM_SSH_KEY }}   # Your private SSH key stored in GitHub Secrets
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "Pulling latest image..."
             docker pull swimpyblaq92/chima:${{ env.IMAGE_TAG }}
@@ -55,3 +55,4 @@ jobs:
             
             echo "Starting new container..."
             docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+
