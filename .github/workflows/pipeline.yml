@@ -34,17 +34,17 @@ jobs:
     steps:
       - name: Set up SSH key
         run: |
-          sudo mkdir -p $HOME/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | sudo tee $HOME/.ssh/id_rsa > /dev/null
-          sudo chmod 600 $HOME/.ssh/id_rsa
-          sudo ssh-keyscan -H ${{ secrets.VM_HOST }} | sudo tee -a $HOME/.ssh/known_hosts > /dev/null
+          mkdir -p $HOME/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" | tr -d '\r' > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> $HOME/.ssh/known_hosts
 
       - name: SSH into VM and Deploy
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.VM_HOST }}     # Your VM's IP address
-          username: ${{ secrets.VM_USER }} # Your VM's SSH username
-          key: ${{ secrets.SSH_PRIVATE_KEY }}   # Your private SSH key stored in GitHub Secrets
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
           script: |
             echo "Pulling latest image..."
             docker pull swimpyblaq92/chima:${{ env.IMAGE_TAG }}
@@ -54,4 +54,4 @@ jobs:
             docker rm my_app_container || true
             
             echo "Starting new container..."
-            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}"
+            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}
