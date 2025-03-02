@@ -32,59 +32,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug Home Directory
-        run: |
-          echo "Checking home directory..."
-          ls -la $HOME
-        shell: bash
-
-      - name: Debug SSH Directory
-        run: |
-          echo "Checking SSH directory..."
-          mkdir -p $HOME/.ssh || { echo "Failed to create .ssh directory"; exit 1; }
-          chmod 700 $HOME/.ssh
-          ls -la $HOME/.ssh
-        shell: bash
-
-      - name: Set up SSH key
-        run: |
-          set -e  # Stop on error
-          echo "Setting up SSH key..."
-
-          # Check if secret is empty
-          if [ -z "${{ secrets.VM_SSH_KEY }}" ]; then
-            echo "ERROR: VM_SSH_KEY is empty!"
-            exit 1
-          fi
-          
-          # Remove Windows-style line endings
-          echo "${{ secrets.VM_SSH_KEY }}" | tr -d '\r' > $HOME/.ssh/id_rsa
-          chmod 600 $HOME/.ssh/id_rsa
-          ls -la $HOME/.ssh
-
-          # Add VM to known hosts
-          echo "Checking VM connectivity..."
-          ping -c 3 ${{ secrets.VM_HOST }} || echo "Ping failed, but continuing..."
-
-          echo "Scanning SSH host key..."
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> $HOME/.ssh/known_hosts || echo "ssh-keyscan failed, continuing without it."
-          chmod 644 $HOME/.ssh/known_hosts
-
-          echo "SSH key setup completed successfully!"
-        shell: bash
-
-      - name: Test SSH Connection
-        run: |
-          echo "Testing SSH connection..."
-          ssh -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "echo 'SSH connection successful'"
-        shell: bash
-
       - name: SSH into VM and Deploy
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
+          host: ${{ secrets.VM_HOST }}     # Your VM's IP address
+          username: ${{ secrets.VM_USER }} # Your VM's SSH username
+          key: ${{ secrets.VM_SSH_KEY }}   # Your private SSH key stored in GitHub Secrets
           script: |
             echo "Pulling latest image..."
             docker pull swimpyblaq92/chima:${{ env.IMAGE_TAG }}
@@ -94,4 +47,4 @@ jobs:
             docker rm my_app_container || true
             
             echo "Starting new container..."
-            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}"
+            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}
