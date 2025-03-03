@@ -34,7 +34,7 @@ jobs:
         with:
           host: ${{ secrets.VM_HOST }}     # Your VM's IP address
           username: ${{ secrets.VM_USER }} # Your VM's SSH username
-          key: ${{ secrets.VM_SSH_KEY }}   # Your private SSH key stored in GitHub Secrets
+          key: ${{ secrets.SSH_PRIVATE_KEY }}   # Your private SSH key stored in GitHub Secrets
           script: |
             echo "Pulling latest image..."
             docker pull swimpyblaq92/chima:latestt
