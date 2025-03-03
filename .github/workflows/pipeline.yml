@@ -15,17 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set Image Tag
-        run: echo "IMAGE_TAG=$(date +%s)" >> $GITHUB_ENV
-
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+        run: docker build . --file Dockerfile --tag swimpyblaq92/chima:latestt
 
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Push Docker image to Docker Hub
-        run: docker push swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+        run: docker push swimpyblaq92/chima:latestt
 
   deploy:
     needs: build
@@ -40,11 +37,11 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}   # Your private SSH key stored in GitHub Secrets
           script: |
             echo "Pulling latest image..."
-            docker pull swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+            docker pull swimpyblaq92/chima:latestt
             
             echo "Stopping existing container..."
-            docker stop my_app_container || true
-            docker rm my_app_container || true
+            docker stop hello_container || true
+            docker rm hello_container || true
             
             echo "Starting new container..."
-            docker run -d --name my_app_container -p 80:80 swimpyblaq92/chima:${{ env.IMAGE_TAG }}
+            docker run -d --name hello_container -p 80:80 swimpyblaq92/chima:latestt
