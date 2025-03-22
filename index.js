@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('Hello from the containerized Node.js app!');
+  res.send('God is the greatest!!!');
 });
 
 app.listen(PORT, () => {
